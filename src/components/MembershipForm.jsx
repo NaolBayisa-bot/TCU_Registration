@@ -13,7 +13,8 @@ const MembershipForm = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const FORMSPREE_URL = "https://formspree.io/f/xdaborao";
+  // Use your specific Deployment URL here
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhyOMob2lrSxdu-Bpi7l0TqTJbaUlgoQJxC06nIcvYjY9RWgEQHPMqo5jL7clxJqv3nA/exec";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,27 +22,26 @@ const MembershipForm = () => {
     setErrorMessage('');
 
     try {
-      const response = await fetch(FORMSPREE_URL, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData),
+      const formBody = new URLSearchParams();
+      Object.entries(formData).forEach(([key, value]) => {
+        formBody.append(key, value);
       });
 
-      if (response.ok) {
+      const response = await (SCRIPT_URL, {
+        method: 'POST',
+        body: formBody,
+      });
+
+      const result = await response.json();
+
+      if (result.status === 'success') {
         setIsSuccess(true);
         setFormData({ name: '', email: '', department: '', year: '', track: '' });
+
         // Reset success message after 5 seconds
         setTimeout(() => setIsSuccess(false), 5000);
       } else {
-        const data = await response.json().catch(() => ({}));
-        if (data.errors) {
-          setErrorMessage(data.errors.map(error => error.message).join(', '));
-        } else {
-          setErrorMessage('Something went wrong. Please try again later.');
-        }
+        throw new Error(result.message || 'Submission failed');
       }
     } catch (error) {
       console.error('Submission Error:', error);
@@ -123,7 +123,7 @@ const MembershipForm = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="department" className="text-xs font-bold text-tcu-gold uppercase tracking-wider">Department / Year</label>
+                  <label htmlFor="department" className="text-xs font-bold text-tcu-gold uppercase tracking-wider">Department / Batch</label>
                   <div className="flex gap-4">
                     <input 
                       type="text" 
@@ -144,7 +144,7 @@ const MembershipForm = () => {
                       value={formData.year}
                       onChange={handleChange}
                       className="w-24 bg-black/50 border border-white/10 rounded-sm px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:border-tcu-gold focus:ring-1 focus:ring-tcu-gold transition-all"
-                      placeholder="Year"
+                      placeholder="Batch"
                     />
                   </div>
                 </div>
